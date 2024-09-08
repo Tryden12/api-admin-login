@@ -1,15 +1,21 @@
 const jwt = require('jsonwebtoken');
+const { getSecretString } = require('../utils/ssm')
 
-function generateToken(userInfo) {
+
+async function generateToken(userInfo) {
+  const secret = await getJwtSecret()
+
   if (!userInfo) { return null; }
 
-  return jwt.sign(userInfo, process.env.JWT_SECRET, {
+  return jwt.sign(userInfo, secret, {
     expiresIn: '1h'
   })
 }
 
-function verifyToken(username, token) {
-    return jwt.verify(token, process.env.JWT_SECRET, (error, response) => {
+async function verifyToken(username, token) {
+    const secret = await getJwtSecret()
+    
+    return jwt.verify(token, secret, (error, response) => {
       if (error) {
         return {
           verified: false,
@@ -29,6 +35,10 @@ function verifyToken(username, token) {
         message: 'verifed'
       }
     })
+}
+
+const getJwtSecret = async () => {
+  return await getSecretString('jwt-secret')
 }
   
 module.exports.generateToken = generateToken;
