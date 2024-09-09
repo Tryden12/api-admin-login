@@ -1,0 +1,151 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: api-admin-login
+Transform:
+- AWS::Serverless-2016-10-31
+Parameters:
+  Module:
+    Type: String
+    Default: api-admin-login
+  Project:
+    Type: String
+    Default: apr
+  Env:
+    Type: String
+    Default: dev
+  JwtSsmParameterName:
+    Type: String
+    Default: jwt-secret
+Globals:
+  Function:
+    Runtime: nodejs20.x
+    CodeUri: src/
+    Handler: index.handler
+    Timeout: 30
+    MemorySize: 128
+    Architectures:
+    - x86_64
+    Environment:
+      Variables:
+        PROJECT:
+          Ref: Project
+        ENV:
+          Ref: Env
+        USER_TABLE:
+          Ref: UserTable
+Resources:
+  AdminLoginApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName:
+        Ref: Env
+      Description: API supporting admin functionalities.
+      Cors:
+        AllowHeaders: '''Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'''
+        AllowMethods: '''DELETE, GET, HEAD, OPTIONS, PATCH, POST, PUT'''
+        AllowOrigin: '''*'''
+  HealthCheck:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName:
+        Fn::Sub: healthCheck-${Env}-${Module}
+      Description: GET method to get the health status of the api.
+      Events:
+        HealthCheck:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: AdminLoginApi
+            Path: /health
+            Method: GET
+      CodeUri: HealthCheck
+    Metadata:
+      SamResourceId: HealthCheck
+  RegisterUser:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName:
+        Fn::Sub: registerUser-${Env}-${Module}
+      Description: POST method to register an admin user for updating admin user table.
+      Policies:
+      - DynamoDBCrudPolicy:
+          TableName:
+            Ref: UserTable
+      Events:
+        RegisterUser:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: AdminLoginApi
+            Path: /register
+            Method: POST
+      CodeUri: RegisterUser
+    Metadata:
+      SamResourceId: RegisterUser
+  LoginUser:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName:
+        Fn::Sub: userLogin-${Env}-${Module}
+      Description: POST method to login an admin user for updating admin user table.
+      Policies:
+      - DynamoDBCrudPolicy:
+          TableName:
+            Ref: UserTable
+      Events:
+        LoginUser:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: AdminLoginApi
+            Path: /login
+            Method: POST
+      CodeUri: LoginUser
+    Metadata:
+      SamResourceId: LoginUser
+  VerifyUser:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName:
+        Fn::Sub: verifyUser-${Env}-${Module}
+      Description: POST method to verify a user.
+      Policies:
+      - DynamoDBCrudPolicy:
+          TableName:
+            Ref: UserTable
+      Events:
+        VerifyUser:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: AdminLoginApi
+            Path: /verify
+            Method: POST
+      CodeUri: VerifyUser
+    Metadata:
+      SamResourceId: VerifyUser
+  UserTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName:
+        Fn::Sub: admin-user-table-${Env}
+      KeySchema:
+      - AttributeName: userId
+        KeyType: HASH
+      AttributeDefinitions:
+      - AttributeName: userId
+        AttributeType: S
+      - AttributeName: username
+        AttributeType: S
+      GlobalSecondaryIndexes:
+      - IndexName: UsernameIndex
+        KeySchema:
+        - AttributeName: username
+          KeyType: HASH
+        Projection:
+          ProjectionType: ALL
+      BillingMode: PAY_PER_REQUEST
+Outputs:
+  AdminLoginApi:
+    Description: API Gateway endpoint URL for ${Env} stage admin login
+    Value:
+      Fn::Sub: https://${AdminLoginApi}.execute-api.${AWS::Region}.amazonaws.com/${Env}/admin/

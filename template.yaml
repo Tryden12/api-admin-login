@@ -54,7 +54,7 @@ Resources:
   HealthCheck:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: HealthCheck
+      FunctionName: !Sub healthCheck-${Env}-${Module}
       Description: GET method to get the health status of the api.
       Events:
         HealthCheck:
@@ -68,7 +68,7 @@ Resources:
   RegisterUser:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: RegisterUser
+      FunctionName: !Sub registerUser-${Env}-${Module}
       Description: POST method to register an admin user for updating admin user table.
       Policies:
         # Give Create/Read/Update/Delete Permissions to the UserTable
@@ -86,7 +86,7 @@ Resources:
   LoginUser:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: LoginUser
+      FunctionName: !Sub userLogin-${Env}-${Module}
       Description: POST method to login an admin user for updating admin user table.
       Policies:
         # Give Create/Read/Update/Delete Permissions to the UserTable
@@ -104,7 +104,7 @@ Resources:
   VerifyUser:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: LoginUser
+      FunctionName: !Sub verifyUser-${Env}-${Module}
       Description: POST method to verify a user.
       Policies:
         # Give Create/Read/Update/Delete Permissions to the UserTable
@@ -122,7 +122,7 @@ Resources:
   UserTable:
     Type: "AWS::DynamoDB::Table"
     Properties:
-      TableName: !Sub admin-user-table-${Env}-${Module}
+      TableName: !Sub admin-user-table-${Env}
       KeySchema:
         - AttributeName: userId
           KeyType: HASH
