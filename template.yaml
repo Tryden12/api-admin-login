@@ -47,18 +47,15 @@ Resources:
         AllowHeaders: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
         AllowMethods: "'DELETE, GET, HEAD, OPTIONS, PATCH, POST, PUT'"
         AllowOrigin: "'*'"
+        
 
 
-# Lambda function config associated with the source code: health-check.js
+  # Lambda function for api health checks
   HealthCheck:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: HealthCheck
       Description: GET method to get the health status of the api.
-      Policies:
-        # Give Create/Read/Update/Delete Permissions to the UserTable
-        - DynamoDBCrudPolicy:
-            TableName: !Ref UserTable
       Events:
         HealthCheck:
           Type: Api
@@ -67,13 +64,12 @@ Resources:
             Path: /health
             Method: GET
 
-  # This is a Lambda function config associated with the source code: get-all-items.js
+  # Lambda function config associated with the service source code: register.js
   RegisterUser:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: RegisterUser
-      Handler: src/handlers/health-check.HealthCheck
-      Description: GET method to get the health status of the api.
+      Description: POST method to register an admin user for updating admin user table.
       Policies:
         # Give Create/Read/Update/Delete Permissions to the UserTable
         - DynamoDBCrudPolicy:
@@ -86,7 +82,41 @@ Resources:
             Path: /register
             Method: POST
 
-  
+  # Lambda function config associated with the service source code: login.js
+  LoginUser:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: LoginUser
+      Description: POST method to login an admin user for updating admin user table.
+      Policies:
+        # Give Create/Read/Update/Delete Permissions to the UserTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref UserTable
+      Events:
+        LoginUser:
+          Type: Api
+          Properties:
+            RestApiId: !Ref AdminLoginApi
+            Path: /login
+            Method: POST
+
+  # Lambda function config associated with the service source code: verify.js
+  VerifyUser:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: LoginUser
+      Description: POST method to verify a user.
+      Policies:
+        # Give Create/Read/Update/Delete Permissions to the UserTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref UserTable
+      Events:
+        VerifyUser:
+          Type: Api
+          Properties:
+            RestApiId: !Ref AdminLoginApi
+            Path: /verify
+            Method: POST
 
   # Database
   UserTable:
@@ -114,4 +144,4 @@ Outputs:
   AdminLoginApi:
     Description: API Gateway endpoint URL for ${Env} stage admin login 
     Value:
-      Fn::Sub: https://${AdminLoginApi}.execute-api.${AWS::Region}.amazonaws.com/${Env}/
+      Fn::Sub: https://${AdminLoginApi}.execute-api.${AWS::Region}.amazonaws.com/${Env}/admin/
