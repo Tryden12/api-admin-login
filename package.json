@@ -6,7 +6,7 @@
     "dependencies": {
         "@aws-sdk/client-dynamodb": "^3.398.0",
         "@aws-sdk/lib-dynamodb": "^3.398.0",
-        "bcryptjs": "2.4.3",
+        "bcryptjs": "^2.4.3",
         "jsonwebtoken": "8.5.1"
     },
     "devDependencies": {
@@ -29,4 +29,3 @@
         ]
     }
 }
-
