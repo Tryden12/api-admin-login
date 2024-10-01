@@ -18,10 +18,9 @@ Parameters:
 Globals:
   Function:
     Runtime: nodejs20.x
-    CodeUri: src/
-    Handler: index.handler
+    Handler: src/index.handler
     Timeout: 30
-    MemorySize: 128
+    MemorySize: 1024
     Architectures:
     - x86_64
     Environment:
