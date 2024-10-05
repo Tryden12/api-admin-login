@@ -1,7 +1,9 @@
 import { buildResponse } from '../utils/util.mjs';
-import { hashSync } from 'bcryptjs';
-import { DynamoDB } from "@aws-sdk/client-dynamodb"; // ES6 import
-import { DynamoDBDocument } from "@aws-sdk/lib-dynamodb"; // ES6 import
+import { DynamoDB } from "@aws-sdk/client-dynamodb"; 
+import { DynamoDBDocument } from "@aws-sdk/lib-dynamodb"; 
+
+import pkg from 'bcryptjs';
+const { hash } = pkg;
 
 // Full DynamoDB Client
 const client = new DynamoDB({});
@@ -32,7 +34,7 @@ async function register(userInfo) {
         })
     }
 
-    const encryptedPW = hashSync(password.trim(), 10);
+    const encryptedPW = hash(password.trim(), 10);
     const user = {
         userId: userId,
         name: name,

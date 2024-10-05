@@ -1,6 +1,7 @@
-import { sign, verify } from 'jsonwebtoken';
 import { getSecretString } from './ssm.mjs';
+import pkg from 'jsonwebtoken';
 
+const { sign, verify } = pkg;
 
 async function generateToken(userInfo) {
   const secret = await getJwtSecret()

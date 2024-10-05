@@ -1,8 +1,10 @@
 import { buildResponse } from '../utils/util.mjs';
-import { compareSync } from 'bcryptjs';
 import { generateToken } from '../utils/auth.mjs';
-import { DynamoDB } from "@aws-sdk/client-dynamodb"; // ES6 import
-import { DynamoDBDocument } from "@aws-sdk/lib-dynamodb"; // ES6 import
+import { DynamoDB } from "@aws-sdk/client-dynamodb"; 
+import { DynamoDBDocument } from "@aws-sdk/lib-dynamodb"; 
+
+import pkg from 'bcryptjs';
+const { compare } = pkg;
 
 // Full DynamoDB Client
 const client = new DynamoDB({});
@@ -28,7 +30,7 @@ async function login(user) {
         return buildResponse(403, { message: 'user does not exist'});
     }
     
-    if (!compareSync(password, dynamoUser.password)) {
+    if (!compare(password, dynamoUser.password)) {
         return buildResponse(403, { message: 'password is incorrect'});
     }
 
