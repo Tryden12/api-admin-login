@@ -1,8 +1,9 @@
 import { buildResponse } from '../utils/util.mjs';
 import { DynamoDB } from "@aws-sdk/client-dynamodb"; 
 import { DynamoDBDocument } from "@aws-sdk/lib-dynamodb"; 
-
+import {v4 as uuidv4} from 'uuid';
 import pkg from 'bcryptjs';
+
 const { hash } = pkg;
 
 // Full DynamoDB Client
