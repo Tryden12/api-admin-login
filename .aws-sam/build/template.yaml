@@ -128,11 +128,9 @@ Resources:
       TableName:
         Fn::Sub: admin-user-table-${Env}
       KeySchema:
-      - AttributeName: userId
+      - AttributeName: username
         KeyType: HASH
       AttributeDefinitions:
-      - AttributeName: userId
-        AttributeType: S
       - AttributeName: username
         AttributeType: S
       GlobalSecondaryIndexes:

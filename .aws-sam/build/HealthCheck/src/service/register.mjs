@@ -1,16 +1,23 @@
 import { buildResponse } from '../utils/util.mjs';
-import { DynamoDB } from "@aws-sdk/client-dynamodb"; 
-import { DynamoDBDocument } from "@aws-sdk/lib-dynamodb"; 
+import { DynamoDBClient, GetItemCommand, PutItemCommand } from "@aws-sdk/client-dynamodb";
 import {v4 as uuidv4} from 'uuid';
 import pkg from 'bcryptjs';
 
 const { hash } = pkg;
 
-// Full DynamoDB Client
-const client = new DynamoDB({});
+// import { DynamoDBClient } from "@aws-sdk/client-dynamodb"; // ES6 import
+// import { DynamoDBDocumentClient, PutCommand, GetCommand } from "@aws-sdk/lib-dynamodb"; // ES6 import
+// const client = new DynamoDBClient({});
+// const dbclient = DynamoDBDocumentClient.from(client);
+// await dbclient.put({
+//     TableName,
+//     Item: {
+//       userId: user.userId,
+//       username: user.username,
+//     },
+//   });
 
-// Full document client
-const docClient = DynamoDBDocument.from(client); // client is DynamoDB client
+const dbclient = new DynamoDBClient();
 
 // Get the DynamoDB table name from environment variables
 const userTable = process.env.USER_TABLE;
@@ -20,28 +27,34 @@ async function register(userInfo) {
     const userId = uuidv4();
     const name = userInfo.name;
     const email = userInfo.email;
-    const username = userInfo.username;
+    const username = userInfo.username.toLowerCase().trim();
     const password = userInfo.password;
     if(!username || !name || !email || !password) {
         return buildResponse(401, {
-            message: 'All fields are required'
-        })
-    }
-
-    const dynamoUser = await getUser(username.toLowerCase().trim());
-    if(dynamoUser && dynamoUser.username) {
-        return buildResponse(401, {
-            message: 'Username already exists. Please choose a different username.'
+            message: 'All fields are required',
+            body: JSON.stringify(userInfo)
         })
     }
 
     const encryptedPW = hash(password.trim(), 10);
     const user = {
-        userId: userId,
-        name: name,
-        email: email,
-        username: username.toLowerCase().trim,
-        password: encryptedPW
+        "userId": userId,
+        "name": name,
+        "email": email,
+        "username": username,
+        "password": encryptedPW 
+        // userId: { S: userId },
+        // name: { S: name },
+        // email: { S: email },
+        // username: { S: username },
+        // password: { S: encryptedPW }
+    }
+
+    const dynamoUser = await getUser(user.username);
+    if(dynamoUser && dynamoUser.username) {
+        return buildResponse(401, {
+            message: 'Username already exists. Please choose a different username.'
+        })
     }
 
     const saveUserResponse = await saveUser(user);
@@ -56,27 +69,58 @@ async function getUser(username) {
     const params = {
         TableName: userTable,
         Key: {
-            username: username
+            "username": { "S": username}
         }
     }
-
-    return await docClient.get(params).promise().then(response => {
-        return response.Item;
-    }, error => {
+    const command = new GetItemCommand(params);
+    try {
+        const response = await dbclient.send(command);
+        return response.Item
+    } catch (error) {
         console.error('There is an error getting user: ', error);
-    })
+    }
+  
+
+    // dbclient
+    // .send(new GetItemCommand(params))
+    // .then((result) => {
+    //     console.log("data:" + result);
+    // })
+    // .catch((err) => {
+    //     console.log("err", err);
+    // });
 }
 
 async function saveUser(user) {
     const params = {
         TableName: userTable,
-        Item: user
+        Item: {
+            "userId": { S: user.userId },
+            "name": { S: user.name },
+            "email": { S: user.email },
+            "username": { S: user.username },
+            "password": { S: user.password }
+            // "userId":  user.userId ,
+            // "name": { S: user.name },
+            // "email": { S: user.email },
+            // "username": { S: user.username },
+            // "password": { S: user.encryptedPW }
+        }
     }
-    return await docClient.put(params).promise().then(() => {
-        return true;
-    }, error => {
-        console.error('There is an error saving user: ', error)
-    });
+
+    const command = new PutItemCommand(params);
+    try {
+        const response = await dbclient.send(command);
+        return true
+    } catch (error) {
+        console.error('There is an error saving user: ', error);
+    }
+
+    // return await docClient.send(command).promise().then(() => {
+    //     return true;
+    // }, error => {
+    //     console.error('There is an error saving user: ', error)
+    // });
 }
 
 const _register = register;
