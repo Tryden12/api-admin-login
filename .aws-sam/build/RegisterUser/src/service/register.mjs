@@ -43,11 +43,6 @@ async function register(userInfo) {
         "email": email,
         "username": username,
         "password": encryptedPW 
-        // userId: { S: userId },
-        // name: { S: name },
-        // email: { S: email },
-        // username: { S: username },
-        // password: { S: encryptedPW }
     }
 
     const dynamoUser = await getUser(user.username);
@@ -93,19 +88,44 @@ async function getUser(username) {
 
 async function saveUser(user) {
     const params = {
-        TableName: userTable,
-        Item: {
-            "userId": { S: user.userId },
-            "name": { S: user.name },
-            "email": { S: user.email },
-            "username": { S: user.username },
-            "password": { S: user.password }
+        "TableName": userTable,
+        "Item": {
+            "userId": {
+                "S": "$user.userId"
+            },
+            "name": {
+                "S": "$user.name"
+                },
+            "email": {
+                "S": "$user.email"
+            },
+            "username": {
+                "S": "$user.username"
+            },
+            "password": {
+                "S": "$user.password"
+            }
+        }
+        // TableName: userTable,
+        // Item: {
+        //     "userId": { "S": user.userId },
+        //     "name": { "S": user.name },
+        //     "email": { "S": user.email },
+        //     "username": { "S": user.username },
+        //     "password": { "S": user.password }
+        // }
+        // Item: {
+            // "userId": { S: user.userId },
+            // "name": { S: user.name },
+            // "email": { S: user.email },
+            // "username": { S: user.username },
+            // "password": { S: user.password }
             // "userId":  user.userId ,
             // "name": { S: user.name },
             // "email": { S: user.email },
             // "username": { S: user.username },
             // "password": { S: user.encryptedPW }
-        }
+        // }
     }
 
     const command = new PutItemCommand(params);
