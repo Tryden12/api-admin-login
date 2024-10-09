@@ -5,18 +5,6 @@ import pkg from 'bcryptjs';
 
 const { hash } = pkg;
 
-// import { DynamoDBClient } from "@aws-sdk/client-dynamodb"; // ES6 import
-// import { DynamoDBDocumentClient, PutCommand, GetCommand } from "@aws-sdk/lib-dynamodb"; // ES6 import
-// const client = new DynamoDBClient({});
-// const dbclient = DynamoDBDocumentClient.from(client);
-// await dbclient.put({
-//     TableName,
-//     Item: {
-//       userId: user.userId,
-//       username: user.username,
-//     },
-//   });
-
 const dbclient = new DynamoDBClient();
 
 // Get the DynamoDB table name from environment variables
@@ -25,25 +13,25 @@ const userTable = process.env.USER_TABLE;
 async function register(userInfo) {
     // Use a random uuidv4 string as a User ID 
     const userId = uuidv4();
-    const name = userInfo.name;
-    const email = userInfo.email;
-    const username = userInfo.username.toLowerCase().trim();
-    const password = userInfo.password;
-    if(!username || !name || !email || !password) {
+    const tempName = userInfo.name;
+    const tempEmail = userInfo.email;
+    const tempUsername = userInfo.username.toLowerCase().trim();
+    const tempPassword = userInfo.password;
+    if(!tempUsername || !tempName || !tempEmail || !tempPassword) {
         return buildResponse(401, {
             message: 'All fields are required',
             body: JSON.stringify(userInfo)
         })
     }
 
-    const encryptedPW = hash(password.trim(), 10);
+    const encryptedPW = await hash(tempPassword.trim(), 10);
     const user = {
-        "userId": userId,
-        "name": name,
-        "email": email,
-        "username": username,
-        "password": encryptedPW 
-    }
+        userId: userId,
+        name: tempName,
+        email: tempEmail,
+        username: tempUsername,
+        password: encryptedPW 
+    };
 
     const dynamoUser = await getUser(user.username);
     if(dynamoUser && dynamoUser.username) {
@@ -57,7 +45,7 @@ async function register(userInfo) {
         return buildResponse(503, {message: 'Server Error. Please try again later.'});
     }
 
-    return buildResponse(200, { username: username });
+    return buildResponse(200, { message: `Username: ${user.username}` });
 }
 
 async function getUser(username) {
@@ -74,16 +62,6 @@ async function getUser(username) {
     } catch (error) {
         console.error('There is an error getting user: ', error);
     }
-  
-
-    // dbclient
-    // .send(new GetItemCommand(params))
-    // .then((result) => {
-    //     console.log("data:" + result);
-    // })
-    // .catch((err) => {
-    //     console.log("err", err);
-    // });
 }
 
 async function saveUser(user) {
@@ -91,19 +69,19 @@ async function saveUser(user) {
         "TableName": userTable,
         "Item": {
             "userId": {
-                "S": "$user.userId"
+                "S": `${user.userId}`
             },
             "name": {
-                "S": "$user.name"
+                "S": `${user.name}`
                 },
             "email": {
-                "S": "$user.email"
+                "S": `${user.email}`
             },
             "username": {
-                "S": "$user.username"
+                "S": `${user.username}`
             },
             "password": {
-                "S": "$user.password"
+                "S": `${user.password}`
             }
         }
     }
@@ -115,12 +93,6 @@ async function saveUser(user) {
     } catch (error) {
         console.error('There is an error saving user: ', error);
     }
-
-    // return await docClient.send(command).promise().then(() => {
-    //     return true;
-    // }, error => {
-    //     console.error('There is an error saving user: ', error)
-    // });
 }
 
 const _register = register;

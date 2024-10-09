@@ -1,16 +1,11 @@
 import { buildResponse } from '../utils/util.mjs';
 import { generateToken } from '../utils/auth.mjs';
-import { DynamoDB } from "@aws-sdk/client-dynamodb"; 
-import { DynamoDBDocument } from "@aws-sdk/lib-dynamodb"; 
+import { DynamoDBClient, GetItemCommand } from "@aws-sdk/client-dynamodb";
 
 import pkg from 'bcryptjs';
 const { compare } = pkg;
 
-// Full DynamoDB Client
-const client = new DynamoDB({});
-
-// Full document client
-const docClient = DynamoDBDocument.from(client); // client is DynamoDB client
+const dbclient = new DynamoDBClient();
 
 // Get the DynamoDB table name from environment variables
 const userTable = process.env.USER_TABLE;
@@ -50,15 +45,16 @@ async function getUser(username) {
     const params = {
       TableName: userTable,
       Key: {
-        username: username
+          "username": { "S": username}
       }
     }
-  
-    return await get(params).promise().then(response => {
-      return response.Item;
-    }, error => {
-      console.error('There is an error getting user: ', error);
-    })
+    const command = new GetItemCommand(params);
+    try {
+        const response = await dbclient.send(command);
+        return response.Item
+    } catch (error) {
+        console.error('There is an error getting user: ', error);
+    }
 }
   
 const _login = login;
