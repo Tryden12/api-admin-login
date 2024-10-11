@@ -21,17 +21,18 @@ async function login(user) {
     }
 
     const dynamoUser = await getUser(username.toLowerCase().trim())
-    if (!dynamoUser || !dynamoUser.username) {
+    if (!dynamoUser || !dynamoUser.username.S) {
         return buildResponse(403, { message: 'user does not exist'});
     }
     
-    if (!compare(password, dynamoUser.password)) {
-        return buildResponse(403, { message: 'password is incorrect'});
+    const passwordsMatch = compare(password, dynamoUser.password.S);
+    if (!passwordsMatch) {
+        return buildResponse(403, { message: "password is incorrect!"});
     }
 
     const userInfo = {
-        username: dynamoUser.username,
-        name: dynamoUser.name
+        username: dynamoUser.username.S,
+        name: dynamoUser.name.S
     }
     const token = generateToken(userInfo)
     const response = {
@@ -41,6 +42,7 @@ async function login(user) {
     return buildResponse(200, response);
 }
 
+// Get User from Dynamo table by username
 async function getUser(username) {
     const params = {
       TableName: userTable,

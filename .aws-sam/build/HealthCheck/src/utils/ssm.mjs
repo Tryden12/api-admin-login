@@ -1,14 +1,24 @@
-import { SSMClient, ListAssociationsCommand } from "@aws-sdk/client-ssm";
+import { SSMClient, GetParameterCommand } from "@aws-sdk/client-ssm";
 
-const ssm = new SSMClient()
+const client = new SSMClient()
 const env = process.env.ENV
 const project = process.env.PROJECT
+const module = process.env.MODULE
 
-export async function getSecretString(name) {
+async function getSecretString(name) {
   const params = {
-    Name: `/${project}/${env}/${name}`,
+    Name: `/${project}/${env}/${module}/${name}`,
     WithDecryption: true,
   }
 
-  return (await ssm.getParameter(params).promise()).Parameter.Value
+  const command = new GetParameterCommand(params)
+  try {
+    const response = await client.send(command);
+    return response.Parameter.Value
+  } catch (error) {
+      console.error('There is an error saving user: ', error);
+  }
 }
+
+const _getSecretString = getSecretString;
+export { _getSecretString as getSecretString };
