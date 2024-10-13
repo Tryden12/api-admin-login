@@ -18,6 +18,9 @@ Parameters:
   JwtSsmParameterName:
     Type: String
     Default: jwt-secret
+  JwtSsmParameterPath:
+    Type: String
+    Default: /apr/dev/api-admin-login/jwt-secret
 
 
 Globals:
@@ -37,7 +40,7 @@ Globals:
 
 Resources:
 
-# API Gateway Setup
+  # API Gateway Setup
   AdminLoginApi:
     Type: AWS::Serverless::Api
     Properties:
@@ -47,8 +50,14 @@ Resources:
         AllowHeaders: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
         AllowMethods: "'DELETE, GET, HEAD, OPTIONS, PATCH, POST, PUT'"
         AllowOrigin: "'*'"
-        
 
+  # JWT Parameter       
+  JWTParameter:
+      Type: AWS::SSM::Parameter
+      Properties:
+        Name: !Ref JwtSsmParameterPath
+        Type: String
+        Value: jwt-secret-bread
 
   # Lambda function for api health checks
   HealthCheck:
@@ -92,6 +101,18 @@ Resources:
         # Give Create/Read/Update/Delete Permissions to the UserTable
         - DynamoDBCrudPolicy:
             TableName: !Ref UserTable
+        - Statement:
+          - Sid: SSMDescribeParametersPolicy
+            Effect: Allow
+            Action:
+              - ssm:DescribeParameters
+            Resource: '*'
+          - Sid: SSMGetParameterPolicy
+            Effect: Allow
+            Action:
+              - ssm:GetParameters
+              - ssm:GetParameter
+            Resource: '*'
       Events:
         LoginUser:
           Type: Api
@@ -99,6 +120,7 @@ Resources:
             RestApiId: !Ref AdminLoginApi
             Path: /login
             Method: POST
+            
 
   # Lambda function config associated with the service source code: verify.mjs
   VerifyUser:
@@ -110,6 +132,18 @@ Resources:
         # Give Create/Read/Update/Delete Permissions to the UserTable
         - DynamoDBCrudPolicy:
             TableName: !Ref UserTable
+        - Statement:
+          - Sid: SSMDescribeParametersPolicy
+            Effect: Allow
+            Action:
+              - ssm:DescribeParameters
+            Resource: '*'
+          - Sid: SSMGetParameterPolicy
+            Effect: Allow
+            Action:
+              - ssm:GetParameters
+              - ssm:GetParameter
+            Resource: '*'
       Events:
         VerifyUser:
           Type: Api

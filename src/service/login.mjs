@@ -14,18 +14,23 @@ async function login(user) {
     const username = user.username;
     const password = user.password;
 
+    // User must enter all required fields
     if (!user || !username || !password) {
         return buildResponse(401, {
             message: 'Username and password are required.'
         })
     }
 
+    // Incorrect username throws 403
     const dynamoUser = await getUser(username.toLowerCase().trim())
     if (!dynamoUser || !dynamoUser.username.S) {
         return buildResponse(403, { message: 'user does not exist'});
     }
     
-    const passwordsMatch = compare(password, dynamoUser.password.S);
+    // Await is needed since compare() is async
+    const passwordsMatch = await compare(password, dynamoUser.password.S);
+    
+    // Incorrect password throws 403 
     if (!passwordsMatch) {
         return buildResponse(403, { message: "password is incorrect!"});
     }
@@ -34,9 +39,14 @@ async function login(user) {
         username: dynamoUser.username.S,
         name: dynamoUser.name.S
     }
-    const token = generateToken(userInfo)
+
+    // Generate token & build 200 response
+    const token = await generateToken(userInfo)
     const response = {
         user: userInfo,
+        passwordsMatch: passwordsMatch,
+        enteredPasssword: user.password,
+        dynamoPassword: dynamoUser.password.S,
         token: token
     }
     return buildResponse(200, response);

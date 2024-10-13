@@ -4,11 +4,16 @@ const client = new SSMClient()
 const env = process.env.ENV
 const project = process.env.PROJECT
 const module = process.env.MODULE
+const { JwtSsmParameterPath } = process.env
 
-async function getSecretString(name) {
+async function getSecretString() {
+  console.log(`
+      JwtSsmParameterPath = ${JwtSsmParameterPath}
+  `)
+
   const params = {
-    Name: `/${project}/${env}/${module}/${name}`,
-    WithDecryption: true,
+    Name: "/apr/dev/api-admin-login/jwt-secret",
+    WithDecryption: false,
   }
 
   const command = new GetParameterCommand(params)
@@ -16,7 +21,7 @@ async function getSecretString(name) {
     const response = await client.send(command);
     return response.Parameter.Value
   } catch (error) {
-      console.error('There is an error saving user: ', error);
+      console.error(`There is an error fetching parameter from path ${parameterPath}: `, error);
   }
 }
 

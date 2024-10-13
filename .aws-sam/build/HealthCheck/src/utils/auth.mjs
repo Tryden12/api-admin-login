@@ -39,7 +39,7 @@ async function verifyToken(username, token) {
 }
 
 const getJwtSecret = async () => {
-  return await getSecretString('jwt-secret')
+  return await getSecretString()
 }
   
 const _generateToken = generateToken;

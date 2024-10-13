@@ -11,7 +11,7 @@ async function verify(requestBody) {
 
   const user = requestBody.user;
   const token = requestBody.token;
-  const verification = verifyToken(user.username, token);
+  const verification = await verifyToken(user.username, token);
   if (!verification.verified) {
     return buildResponse(401, verification);
   }
