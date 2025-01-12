@@ -17,8 +17,8 @@ lint = true
 capabilities = "CAPABILITY_IAM"
 confirm_changeset = true
 resolve_s3 = true
-stack_name = "stack-api-admin-login"
-s3_prefix = "stack-api-admin-login"
+stack_name = "api-admin-login-dev"
+s3_prefix = "api-admin-login-dev"
 region = "us-east-1"
 parameter_overrides = "Module=\"api-admin-login\" Project=\"apr\" Env=\"dev\" JwtSsmParameterName=\"jwt-secret\" JwtSsmParameterPath=\"/apr/dev/api-admin-login/jwt-secret\""
 image_repositories = []

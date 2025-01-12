@@ -7,9 +7,6 @@ const module = process.env.MODULE
 const { JwtSsmParameterPath } = process.env
 
 async function getSecretString() {
-  console.log(`
-      JwtSsmParameterPath = ${JwtSsmParameterPath}
-  `)
 
   const params = {
     Name: "/apr/dev/api-admin-login/jwt-secret",
